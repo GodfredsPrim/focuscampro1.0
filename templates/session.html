@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusCam - Live Focus Mode</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; overflow: hidden; position: relative; }
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
+        .main-container { position: relative; z-index: 1; min-height: 100vh; padding: 2rem 0; }
+        .video-container { border-radius: 1.5rem; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.4); border: 4px solid rgba(255,255,255,0.2); }
+        .dashboard-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border: none; border-radius: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .progress-ring { width: 250px; height: 250px; filter: drop-shadow(0 0 20px rgba(0,255,136,0.7)); }
+        .progress-ring circle { transition: all 0.8s ease; }
+        .timer-display { font-size: 5.5rem; font-weight: 700; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        #phaseText { font-size: 2rem; text-shadow: 0 0 10px rgba(255,255,255,0.7); }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @media (max-width: 992px) { 
+            .timer-display { font-size: 4rem; } 
+            .progress-ring { width: 200px; height: 200px; }
+            #phaseText { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="main-container container">
+        <div class="row g-5 align-items-center">
+            <!-- Video Feed -->
+            <div class="col-lg-6">
+                <div class="video-container">
+                    <img src="/video_feed" class="w-100" style="max-height: 75vh; object-fit: contain;" alt="Live FocusCam">
+                </div>
+            </div>
+            
+            <!-- Animated Dashboard -->
+            <div class="col-lg-6">
+                <div class="dashboard-card text-white p-5">
+                    <div class="text-center mb-5">
+                        <h1 class="fw-bold display-4">🔥 FocusCam Live</h1>
+                        <div id="phaseText" class="my-4 pulse">Ready to crush it? 💪</div>
+                        <div id="cycleText" class="fs-3 fw-bold text-warning mb-4"></div>
+                    </div>
+                    
+                    <!-- Animated Progress Ring -->
+                    <div class="text-center my-5">
+                        <svg class="progress-ring mx-auto" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="#333" stroke-width="12"/>
+                            <circle id="progressCircle" cx="60" cy="60" r="54" fill="none" stroke="#00ff88" stroke-width="12" 
+                                    stroke-dasharray="339.3" stroke-dashoffset="339.3" transform="rotate(-90 60 60)"/>
+                        </svg>
+                        <div id="focusPercent" class="mt-4 display-3 fw-bold">0%</div>
+                    </div>
+                    
+                    <!-- Super Big Timer -->
+                    <div class="text-center mb-5">
+                        <div id="timer" class="timer-display">00:00</div>
+                        <p id="goalText" class="fs-4 opacity-80 mt-3"></p>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="d-grid gap-4">
+                        <button id="pauseBtn" class="btn btn-lg btn-warning shadow-lg pulse"><i class="bi bi-pause-fill"></i> Pause Session</button>
+                        <button id="stopBtn" class="btn btn-lg btn-danger shadow-lg"><i class="bi bi-stop-fill"></i> End Session</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Particles.js config - eye-catching floating orbs
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa502', '#ffd93d'] },
+                shape: { type: 'circle' },
+                opacity: { value: 0.8, random: true },
+                size: { value: 4, random: true },
+                line_linked: { enable: false },
+                move: { enable: true, speed: 2, direction: 'none', random: true, straight: false }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'repulse' }, resize: true }
+            },
+            retina_detect: true
+        });
+
+        // Dark mode toggle removed for vibrant feel (or keep if you want)
+
+        const timerEl = document.getElementById('timer');
+        const focusPercentEl = document.getElementById('focusPercent');
+        const progressCircle = document.getElementById('progressCircle');
+        const phaseTextEl = document.getElementById('phaseText');
+        const cycleTextEl = document.getElementById('cycleText');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const goalTextEl = document.getElementById('goalText');
+
+        const circumference = 339.3;
+
+        function updateProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+            // Dynamic glow color
+            if (percent >= 90) {
+                progressCircle.style.stroke = '#00ff88';
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else if (percent >= 70) {
+                progressCircle.style.stroke = '#ffff00';
+            } else {
+                progressCircle.style.stroke = '#ff4444';
+            }
+        }
+
+        function celebratePhase() {
+            confetti({
+                particleCount: 200,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa502', '#ffd93d']
+            });
+        }
+
+        function updateStatus() {
+            fetch('/status')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ended) {
+                        celebratePhase();
+                        const match = data.message.match(/Focus: (\d+)%/);
+                        if (match && parseInt(match[1]) >= 90) {
+                            confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 } });
+                        }
+                        alert(data.message);
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    timerEl.textContent = data.time_str;
+                    focusPercentEl.textContent = data.focus_percent + '%';
+                    updateProgress(data.focus_percent);
+
+                    if (data.is_pomodoro) {
+                        phaseTextEl.textContent = data.phase_name === 'Work Session' ? '🍅 Focus Time!' : data.phase_name === 'Short Break' ? '☕ Quick Break' : '🌴 Long Recharge';
+                        if (data.cycle) cycleTextEl.textContent = `Cycle ${data.cycle}`;
+                    } else {
+                        phaseTextEl.textContent = '🚀 Single Focus Mode';
+                        cycleTextEl.textContent = '';
+                    }
+
+                    // Change body gradient based on phase
+                    if (data.phase === 'work') {
+                        document.body.style.background = 'linear-gradient(135deg, #ff6b6b, #ffa502)';
+                    } else {
+                        document.body.style.background = 'linear-gradient(135deg, #4ecdc4, #45b7d1)';
+                    }
+                });
+        }
+
+        pauseBtn.addEventListener('click', () => {
+            fetch('/toggle_pause', {method: 'POST'})
+                .then(res => res.json())
+                .then(data => {
+                    pauseBtn.innerHTML = data.paused ? '<i class="bi bi-play-fill"></i> Resume' : '<i class="bi bi-pause-fill"></i> Pause';
+                });
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            if (confirm('End session now?')) {
+                fetch('/stop_session', {method: 'POST'}).then(() => window.location.href = '/');
+            }
+        });
+
+        setInterval(updateStatus, 1000);
+        updateStatus();
+    </script>
+</body>
+</html>

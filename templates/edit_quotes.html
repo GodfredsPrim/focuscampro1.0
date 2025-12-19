@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Quotes</title></head>
+<body>
+    <h1>Edit Quotes</h1>
+    <a href="/edit_quotes?category=motivational">Motivational</a> | <a href="/edit_quotes?category=punishing">Punishing</a>
+    <ul>
+        {% for q in quotes %}
+        <li>{{ q }} <form action="/delete_quote" method="POST" style="display:inline;">
+            <input type="hidden" name="category" value="{{ category }}">
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <button type="submit">Delete</button>
+        </form></li>
+        {% endfor %}
+    </ul>
+    <form action="/add_quote" method="POST">
+        <input type="hidden" name="category" value="{{ category }}">
+        <input type="text" name="quote" placeholder="Enter quote">
+        <button type="submit">Add</button>
+    </form>
+    <a href="/">Back</a>
+</body>
+</html>

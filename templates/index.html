@@ -1,1 +1,55 @@
-
+<!DOCTYPE html>
+<html lang="en" class="dark:bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusCam - Modern Study Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card { transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body class="bg-light dark:bg-gray-900 text-dark dark:text-light min-vh-100 d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <h1 class="text-center mb-4 fw-bold">🎯 FocusCam</h1>
+                        <p class="text-center text-muted mb-5">Modern Focus Assistant by Godfred Bio</p>
+                        
+                        <form action="/start" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" name="username" class="form-control form-control-lg" value="{{ settings.username }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Duration (minutes)</label>
+                                <input type="number" name="duration" class="form-control form-control-lg" value="{{ settings.duration }}" min="1" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">Session Goal</label>
+                                <input type="text" name="goal" class="form-control form-control-lg" value="{{ settings.goal }}" placeholder="e.g., Finish Math Chapter">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Start Focus Session</button>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <a href="/edit_quotes" class="btn btn-outline-secondary me-2">📝 Edit Quotes</a>
+                            <a href="/export_csv" class="btn btn-outline-secondary">📤 Export Log</a>
+                        </div>
+                        
+                        <p class="text-center text-muted small mt-5">
+                            Made by Godfred Bio | GitHub: godfredsprim | YouTube: GoddAura
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
